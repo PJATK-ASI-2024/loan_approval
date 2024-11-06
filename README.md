@@ -6,4 +6,4 @@ Cel projektu: Wdrożenie modelu predykcyjnego dla wartości opisującej czy osob
 
 Problem do rozwiązania: Wytworzenie oraz wdrożenie modelu o zadowalającej jakości.
 
-Wybrane źródło danych: Dane historyczne na temat udzielanych pożyczek.
+Wybrane źródło danych: Dane historyczne na temat udzielanych pożyczek. Dataset zawiera 45,000 rekordów.
