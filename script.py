@@ -1,27 +1,45 @@
+import logging
 import kagglehub
 import os
 import shutil
 from sklearn.model_selection import train_test_split
 import pandas as pd
 
-script_folder = os.path.dirname(os.path.realpath(__file__))
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('log.txt'),
+        logging.StreamHandler()
+    ]
+)
 
-downloaded_path = kagglehub.dataset_download("taweilo/loan-approval-classification-data")
+def download_and_split_data():
 
-for file_name in os.listdir(downloaded_path):
-    if os.path.exists(f"./{file_name}"):
-        os.remove(f"./{file_name}")
-    shutil.move(os.path.join(downloaded_path, file_name), "./")
+    path = kagglehub.dataset_download("taweilo/loan-approval-classification-data")
+    logging.info(f"Downloaded dataset to {path}")
 
-src = pd.read_csv("./loan_data.csv")
-data70, data30 = train_test_split(src, test_size=0.3)
+    for file_name in os.listdir(path):
+        destination_path = os.path.join("./", file_name)
+        if os.path.exists(destination_path):
+            os.remove(destination_path)
+        shutil.move(os.path.join(path, file_name), destination_path)
+        logging.info(f"Moved {file_name} to {destination_path}")
 
-print(src.shape[0])
-print(data70.shape[0])
-print(data30.shape[0])
+    src = pd.read_csv("./loan_data.csv")
+    data70, data30 = train_test_split(src, test_size=0.3)
 
-data70.to_csv(os.path.join("./", "loan_data_70.csv"), index=False)
-data30.to_csv(os.path.join("./", "loan_data_30.csv"), index=False)
+    logging.info(f"Total records: {src.shape[0]}")
+    logging.info(f"Training set size (70%): {data70.shape[0]}")
+    logging.info(f"Test set size (30%): {data30.shape[0]}")
 
-df = pd.read_csv("./loan_data_70.csv")
-print(df.shape[0])
+    data70.to_csv(os.path.join("./", "loan_data_70.csv"), index=False)
+    data30.to_csv(os.path.join("./", "loan_data_30.csv"), index=False)
+
+    df = pd.read_csv("./loan_data_70.csv")
+    logging.info(f"Loaded training set size from file: {df.shape[0]}")
+
+    return df
+
+if __name__ == "__main__":
+    df = download_and_split_data()
