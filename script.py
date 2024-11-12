@@ -20,6 +20,8 @@ def download_and_split_data():
     logging.info(f"Downloaded dataset to {path}")
 
     for file_name in os.listdir(path):
+        if os.path.exists(f"./{file_name}"):
+            os.remove(f"./{file_name}")
         shutil.move(os.path.join(path, file_name), "./")
 
     src = pd.read_csv("./loan_data.csv")
