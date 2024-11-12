@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  prepare_data:
+  run_script:
     runs-on: ubuntu-latest
     
     steps:
