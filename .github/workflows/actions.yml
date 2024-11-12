@@ -1,0 +1,46 @@
+
+name: CI/CD Pipeline for project
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  prepare_data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12.0' 
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade setuptools
+          pip install -r requirements.txt
+      
+      - name: Run script
+        run: python script.py
+
+      - name: Upload log artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: log
+          path: log.txt
+
+      - name: Upload log artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: loan_data_70
+          path: loan_data_70.csv
+
+      - name: Upload log artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: loan_data_30
+          path: loan_data_30.csv
