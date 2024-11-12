@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split
 import seaborn as sns
 import matplotlib.ticker as ticker
 from matplotlib.backends.backend_pdf import PdfPages
+from xgboost import XGBClassifier
 import ydata_profiling as yp
 from tpot import TPOTClassifier
 
@@ -160,7 +161,7 @@ def autoML(X_train, y_train):
 
 def randomForest(X_train, y_train, X_test, y_test): 
     
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model = RandomForestClassifier()
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
@@ -168,8 +169,21 @@ def randomForest(X_train, y_train, X_test, y_test):
     accuracy = accuracy_score(y_test, y_pred)
     mae = mean_absolute_error(y_test, y_pred)
 
-    print(f"Model accuracy: {accuracy * 100:.2f}%")
-    print(f"Model mae: {mae:.2f}%")
+    print(f"Random forest model accuracy: {accuracy * 100:.2f}%")
+    print(f"Random forest model mae: {mae:.2f}%")
+
+def XGB(X_train, y_train, X_test, y_test): 
+    
+    model = XGBClassifier()
+    model.fit(X_train, y_train)
+
+    y_pred = model.predict(X_test)
+
+    accuracy = accuracy_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+
+    print(f"XGB model accuracy: {accuracy * 100:.2f}%")
+    print(f"XGB model mae: {mae:.2f}%")
 
 if __name__ == "__main__":
     df = download_and_split_data()
@@ -177,5 +191,6 @@ if __name__ == "__main__":
         EDA(df, pdf_pages)
     df = pd.read_csv("loan_data_70.csv")
     X_train, y_train, X_test, y_test = dataPrep(df)
-    autoML(X_train, y_train)
+    # autoML(X_train, y_train)
     randomForest(X_train, y_train, X_test, y_test)
+    XGB(X_train, y_train, X_test, y_test)
