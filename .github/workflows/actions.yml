@@ -1,7 +1,6 @@
 
 name: CI/CD Pipeline for project
 
-
 on:
   push:
     branches:
@@ -31,5 +30,17 @@ jobs:
       - name: Upload log artifact
         uses: actions/upload-artifact@v3
         with:
-          name: logs
+          name: log
           path: log.txt
+
+      - name: Upload log artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: loan_data_70
+          path: loan_data_70.csv
+
+      - name: Upload log artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: loan_data_30
+          path: loan_data_30.csv

@@ -2,8 +2,8 @@ import logging
 import kagglehub
 import os
 import shutil
-from sklearn.model_selection import train_test_split
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,11 +20,7 @@ def download_and_split_data():
     logging.info(f"Downloaded dataset to {path}")
 
     for file_name in os.listdir(path):
-        destination_path = os.path.join("./", file_name)
-        if os.path.exists(destination_path):
-            os.remove(destination_path)
-        shutil.move(os.path.join(path, file_name), destination_path)
-        logging.info(f"Moved {file_name} to {destination_path}")
+        shutil.move(os.path.join(path, file_name), "./")
 
     src = pd.read_csv("./loan_data.csv")
     data70, data30 = train_test_split(src, test_size=0.3)

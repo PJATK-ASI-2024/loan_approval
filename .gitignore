@@ -163,3 +163,5 @@ cython_debug/
 
 loan_data.csv
 log.txt
+loan_data_70.csv
+loan_data_30.csv
