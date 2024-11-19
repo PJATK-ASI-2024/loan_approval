@@ -11,6 +11,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 def download_and_split_data():
 
 
+    kagglehub.login() 
+    
     path = kagglehub.dataset_download("taweilo/loan-approval-classification-data")
     logging.info(f"Downloaded dataset to {path}")
 
@@ -25,9 +27,6 @@ def download_and_split_data():
     logging.info(f"Total records: {src.shape[0]}")
     logging.info(f"Modelowy (70%): {data70.shape[0]}")
     logging.info(f"Douczeniowy (30%): {data30.shape[0]}")
-
-    data70.to_csv(os.path.join("./", "loan_data_70.csv"), index=False)
-    data30.to_csv(os.path.join("./", "loan_data_30.csv"), index=False)
 
     SHEETS_ID = os.getenv('SHEETS_ID')
 
