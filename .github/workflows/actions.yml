@@ -24,8 +24,13 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
       
-      - name: Run script
-        run: python script.py
+      - name: Run scripts
+        run: |
+          python split.py
+          python train.py
+        env:
+          SHEETS_KEY: ${{ secrets.SHEETS_KEY }}
+          SHEET_ID: ${{ secrets.SHEET_ID }}
 
       - name: Upload log artifact
         uses: actions/upload-artifact@v3
