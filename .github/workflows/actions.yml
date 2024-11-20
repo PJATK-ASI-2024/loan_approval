@@ -25,9 +25,7 @@ jobs:
           pip install -r requirements.txt
       
       - name: Run scripts
-        run: |
-          python split.py
-          python train.py
+        run: python train.py
         env:
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}

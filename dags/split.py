@@ -22,7 +22,7 @@ logging.basicConfig(
 
 def download():
     import kagglehub
-    path = kagglehub.dataset_download("taweilo/loan-approval-classification-data")
+    path = kagglehub.dataset_download("taweilo/loan-approval-classification-data", force_download=True)
     logging.info(f"Downloaded dataset to {path}")
 
     for file_name in os.listdir(path):
@@ -30,7 +30,7 @@ def download():
             os.remove(f"./{file_name}")
         shutil.move(os.path.join(path, file_name), "./")
 
-def split_data(**kwargs):
+def split_data():
 
     src = pd.read_csv("./loan_data.csv")
     data70, data30 = train_test_split(src, test_size=0.3, random_state=80)
@@ -39,27 +39,21 @@ def split_data(**kwargs):
     logging.info(f"Modelowy (70%): {data70.shape[0]}")
     logging.info(f"Douczeniowy (30%): {data30.shape[0]}")
 
-    data70.to_csv('/tmp/data70.csv', index=False)
-    data30.to_csv('/tmp/data30.csv', index=False)
-
-    kwargs['ti'].xcom_push(key='data70_path', value='/tmp/data70.csv')
-    kwargs['ti'].xcom_push(key='data30_path', value='/tmp/data30.csv')
+    data70.to_csv('data70.csv', index=False)
+    data30.to_csv('data30.csv', index=False)
 
 
-def upload(**kwargs):
+def upload():
     SHEETS_ID = os.getenv('SHEETS_ID')
 
     credentials = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(os.getenv('SHEETS_KEY')), ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
    
+    data30 = pd.read_csv('data30.csv')
+    data70 = pd.read_csv('data70.csv')
+
     client = gspread.authorize(credentials)
     sheet = client.open_by_key(SHEETS_ID)
     
-    data70_path = kwargs['ti'].xcom_pull(task_ids='split_data', key='data70_path')
-    data30_path = kwargs['ti'].xcom_pull(task_ids='split_data', key='data30_path')
-
-    data70 = pd.read_csv(data70_path)
-    data30 = pd.read_csv(data30_path)
-
     modelowy = sheet.worksheet("Modelowy")
     modelowy.clear()
     set_with_dataframe(modelowy, data70)
@@ -71,26 +65,26 @@ def upload(**kwargs):
     logging.info("Data successfully saved to Google Sheets")
 
 with DAG(
-    'split',
+    'split_dag',
     start_date=datetime(2023, 1, 1),
-    schedule_interval='@daily',
+    schedule_interval=None,
+    catchup=False,
 ) as dag:
 
-    download_data = PythonOperator(
-        task_id='download_data',
+    download_task = PythonOperator(
+        task_id='download_task',
         python_callable=download,
     )
 
-    split_data_task = PythonOperator(
-        task_id='split_data',
+    split_task = PythonOperator(
+        task_id='split_task',
         python_callable=split_data,
-        provide_context=True
     )
 
-    save_data_to_sheets = PythonOperator(
-        task_id='upload_data',
+    upload_task = PythonOperator(
+        task_id='upload_task',
         python_callable=upload,
-        provide_context=True
     )
 
-    download_data >> split_data_task >> save_data_to_sheets
+    download_task >> split_task >> upload_task
+

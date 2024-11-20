@@ -21,7 +21,7 @@ logging.basicConfig(
     ]
 )
 
-def download(**kwargs):
+def download():
     logging.info("downloading...")
 
     SHEETS_ID = os.getenv('SHEETS_ID')
@@ -37,34 +37,36 @@ def download(**kwargs):
     df = df[1:]
     logging.info("downloaded")
 
-    temp_file = '/tmp/modelowy.csv'
-    df.to_csv(temp_file, index=False)
-    kwargs['ti'].xcom_push(key='download_path', value=temp_file)
+    df.to_csv('data.csv', index=False)
 
-def dataPrep1(**kwargs):
+
+def dataPrep1():
+
+    df = pd.read_csv('data.csv')
+
     logging.info("preparing part 1...")
-
-    download_path = kwargs['ti'].xcom_pull(task_ids='download_data', key='download_path')
-    df = pd.read_csv(download_path)
-
     num_cols = ['person_age', 'person_income',
        'person_emp_exp', 'loan_amnt',
        'loan_int_rate', 'loan_percent_income', 'cb_person_cred_hist_length',
        'credit_score', 'loan_status']
     for col in num_cols:
-        df[col] = df[col].str.replace(',', '.', regex=False)
+        df[col] = df[col].astype(str).str.replace(',', '.', regex=False)
 
     num_duplicates = df.duplicated().sum()
     if num_duplicates > 0:
         logging.info(f"Found {num_duplicates} duplicates. Removing them.")
         df = df.drop_duplicates()
     df.replace('', np.nan, inplace=True)
-    return df
 
-def dataPrep2(**kwargs):
+    logging.info("Finished prep part 1...")
+    logging.info("saving file...")
 
-    prep1_path = kwargs['ti'].xcom_pull(task_ids='dataPrep1', key='prep1_path')
-    df = pd.read_csv(prep1_path)
+    df.to_csv('data.csv', index=False)
+    logging.info("saved file")
+
+def dataPrep2():
+
+    df = pd.read_csv('data.csv')
 
     scaler = StandardScaler()
     minMax = MinMaxScaler(feature_range=(0, 1))
@@ -80,19 +82,19 @@ def dataPrep2(**kwargs):
     df[num_cols] = minMax.fit_transform(df[num_cols])
     logging.info("normalization done")
 
-    return df
+    df.to_csv('data.csv', index=False)
 
 
-def upload(**kwargs):
+def upload():
     
+
+    df = pd.read_csv('data.csv')
+
     SHEETS_ID = os.getenv('SHEETS_ID')
     credentials = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(os.getenv('SHEETS_KEY')), ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
    
     client = gspread.authorize(credentials)
     sheet = client.open_by_key(SHEETS_ID)
-
-    prep2_path = kwargs['ti'].xcom_pull(task_ids='dataPrep2', key='prep2_path')
-    df = pd.read_csv(prep2_path)
     
     prepared = sheet.worksheet("Prepared")
     prepared.clear()
@@ -103,32 +105,29 @@ def upload(**kwargs):
 
 
 with DAG(
-    'prepare',
+    'prep_dag',
     start_date=datetime(2023, 1, 1),
-    schedule_interval='@daily',
+    schedule_interval=None,
+    catchup=False
 ) as dag:
 
-    download_data = PythonOperator(
-        task_id='download_data',
+    download_task = PythonOperator(
+        task_id='download_task',
         python_callable=download,
     )
 
     dataPrep1_task = PythonOperator(
-        task_id='dataPrep1',
+        task_id='dataPrep1_task',
         python_callable=dataPrep1,
-        provide_context=True
     )
     dataPrep2_task = PythonOperator(
-        task_id='dataPrep2',
+        task_id='dataPrep2_task',
         python_callable=dataPrep2,
-        provide_context=True
     )
 
-    save_data_to_sheets = PythonOperator(
-        task_id='upload_data',
+    upload_task = PythonOperator(
+        task_id='upload_task',
         python_callable=upload,
-        provide_context=True
     )
 
-    download_data >> dataPrep1_task >> dataPrep2_task >> save_data_to_sheets
-
+    download_task >> dataPrep1_task >> dataPrep2_task >> upload_task

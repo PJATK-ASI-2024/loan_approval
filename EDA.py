@@ -1,23 +1,13 @@
 
 import json
-import logging
 import gspread
-import kagglehub
 import os
-import shutil
 from matplotlib import pyplot as plt
 import pandas as pd
-from sklearn.metrics import accuracy_score
-from sklearn.discriminant_analysis import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import train_test_split
 import seaborn as sns
 import matplotlib.ticker as ticker
 from matplotlib.backends.backend_pdf import PdfPages
-from xgboost import XGBClassifier
 import ydata_profiling as yp
-from tpot import TPOTClassifier
 from oauth2client.service_account import ServiceAccountCredentials
 
 
