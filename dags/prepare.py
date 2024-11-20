@@ -105,7 +105,7 @@ def upload():
 
 
 with DAG(
-    'prep_dag',
+    'prepare_dag',
     start_date=datetime(2023, 1, 1),
     schedule_interval=None,
     catchup=False

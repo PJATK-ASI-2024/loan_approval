@@ -53,6 +53,10 @@ x-airflow-common:
   build: .
   environment:
     &airflow-common-env
+    SHEETS_ID: ${SHEETS_ID}
+    SHEETS_KEY: ${SHEETS_KEY}
+    KAGGLE_KEY: ${KAGGLE_KEY}
+    KAGGLE_USERNAME: ${KAGGLE_USERNAME}
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
@@ -118,8 +122,6 @@ services:
   airflow-webserver:
     <<: *airflow-common
     command: webserver
-    env_file:
-      - .env
     ports:
       - "8080:8080"
     healthcheck:
@@ -129,6 +131,8 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    environment:
+      <<: *airflow-common-env
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -137,8 +141,6 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
-    env_file:
-      - .env
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
@@ -146,6 +148,8 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    environment:
+      <<: *airflow-common-env
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
