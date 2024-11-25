@@ -46,7 +46,13 @@ def download():
     df = df[1:]
     logging.info("downloaded")
 
-    df.to_csv('/opt/airflow/processed_data/processed_data.csv', index=False)
+
+    directory = '/opt/airflow/processed_data'
+    file_path = os.path.join(directory, 'processed_data.csv')
+
+    os.makedirs(directory, exist_ok=True)
+
+    df.to_csv(file_path, index=False)
 
 
 def dataPrep1():
@@ -107,7 +113,12 @@ def EDA():
     
     num_cols = df.select_dtypes(include=['int64', 'float64']).columns
 
-    with PdfPages('/opt/airflow/visualizations/plots.pdf') as pdf_pages:
+    directory = '/opt/airflow/visualizations'
+    file_path = os.path.join(directory, 'plots.pdf')
+
+    os.makedirs(directory, exist_ok=True)
+
+    with PdfPages(file_path) as pdf_pages:
 
         for col in num_cols:
 
@@ -159,7 +170,12 @@ def EDA():
     print(df.isnull().sum())
 
     profile = yp.ProfileReport(df)
-    profile.to_file("/opt/airflow/visualizations/profile_report.html")
+
+    file_path = os.path.join(directory, 'profile_report.html')
+
+    profile.to_file(file_path)
+
+    
 
 def upload():
     

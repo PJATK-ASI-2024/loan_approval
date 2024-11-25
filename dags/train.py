@@ -1,27 +1,17 @@
-import json
+
 import logging
+import pickle
 from airflow import DAG
 import gspread
 import os
 import pandas as pd
 from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
-from tpot import TPOTClassifier
-from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
-import json
 import logging
-from airflow import DAG
-import gspread
-import os
 import json
-import gspread
-import os
-import pandas as pd
-import pickle
-from oauth2client.service_account import ServiceAccountCredentials
-import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 from airflow.operators.python import PythonOperator
 
@@ -50,53 +40,58 @@ def download():
     df = df[1:]
     logging.info("downloaded")
 
-    df.to_csv('/opt/airflow/processed_data/processed_data.csv', index=False)
+    directory = '/opt/airflow/processed_data'
+    file_path = os.path.join(directory, 'processed_data.csv')
 
-def autoML():
+    os.makedirs(directory, exist_ok=True)
 
-    df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv')
+    df.to_csv(file_path, index=False)
 
-    df = pd.get_dummies(df, drop_first=True)
-    feats = ['person_age', 'person_income', 'person_emp_exp', 'loan_amnt',
-       'loan_int_rate', 'loan_percent_income', 'cb_person_cred_hist_length',
-       'credit_score',  'person_gender_male',
-       'person_education_Bachelor', 'person_education_Doctorate',
-       'person_education_High School', 'person_education_Master',
-       'person_home_ownership_OTHER', 'person_home_ownership_OWN',
-       'person_home_ownership_RENT', 'loan_intent_EDUCATION',
-       'loan_intent_HOMEIMPROVEMENT', 'loan_intent_MEDICAL',
-       'loan_intent_PERSONAL', 'loan_intent_VENTURE',
-       'previous_loan_defaults_on_file_Yes']
+def train():
+
+    df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv', nrows=10000)
+
     
-    target = 'loan_status'
+    X = df.drop('loan_status', axis=1)
+    X = pd.get_dummies(X, drop_first=True)
+    
+    y = df['loan_status']
 
-    train, test = train_test_split(df, test_size=0.3)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-    X_train = train.loc[:, feats]
-    y_train = train[target]
+    model = RandomForestClassifier()
+    model.fit(X_train, y_train)
 
-    X_test = test.loc[:, feats] 
-    y_test= test[target]
+    y_pred = model.predict(X_test)
 
-    tpot = TPOTClassifier(cv=5, verbosity=3, generations=3, population_size=50)
+    accuracy = accuracy_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+    
 
-    tpot.fit(X_train, y_train)
+    directory = '/opt/airflow/models'
+    file_path = os.path.join(directory, 'model.py')
 
+    os.makedirs(directory, exist_ok=True)
 
-    score = tpot.score(X_test, y_test)
+    with open('/opt/airflow/models/model.pkl', 'wb') as f:
+        pickle.dump(model, f)
 
-    tpot.export("/opt/airflow/models/model.py")
+    directory = '/opt/airflow/reports'
+    file_path = os.path.join(directory, 'evaluation_report.txt')
 
-    with open("/opt/airflow/reports/evaluation_report.txt", 'w') as report_file:
+    os.makedirs(directory, exist_ok=True)
+
+    with open(file_path, 'w') as report_file:
         report_file.write(f"Model Evaluation Report\n")
         report_file.write(f"------------------------\n")
-        report_file.write(f"Accuracy: {score * 100:.2f}%\n")
+        report_file.write(f"Random forest model accuracy: {accuracy * 100:.2f}%")
+        report_file.write(f"Random forest model mae: {mae:.2f}%")
     
 with DAG(
     'train_dag',
     start_date=datetime(2023, 1, 1),
     schedule_interval=None,
-    catchup=False
+    catchup=False,
 ) as dag:
 
     download_task = PythonOperator(
@@ -104,10 +99,10 @@ with DAG(
         python_callable=download,
     )
 
-    autoML_task = PythonOperator(
-        task_id='autoML_task',
-        python_callable=autoML,
+    train_task = PythonOperator(
+        task_id='train_task',
+        python_callable=train,
     )
 
 
-    download_task >> autoML_task 
+    download_task >> train_task 
