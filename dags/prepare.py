@@ -1,10 +1,19 @@
-
 from datetime import datetime
 import json
 import logging
 from airflow import DAG
 import gspread
 import os
+import json
+import gspread
+import os
+from matplotlib import pyplot as plt
+import pandas as pd
+import seaborn as sns
+import matplotlib.ticker as ticker
+from matplotlib.backends.backend_pdf import PdfPages
+import ydata_profiling as yp
+from oauth2client.service_account import ServiceAccountCredentials
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -37,12 +46,12 @@ def download():
     df = df[1:]
     logging.info("downloaded")
 
-    df.to_csv('data.csv', index=False)
+    df.to_csv('/opt/airflow/processed_data/processed_data.csv', index=False)
 
 
 def dataPrep1():
 
-    df = pd.read_csv('data.csv')
+    df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv')
 
     logging.info("preparing part 1...")
     num_cols = ['person_age', 'person_income',
@@ -61,12 +70,12 @@ def dataPrep1():
     logging.info("Finished prep part 1...")
     logging.info("saving file...")
 
-    df.to_csv('data.csv', index=False)
+    df.to_csv('/opt/airflow/processed_data/processed_data.csv', index=False)
     logging.info("saved file")
 
 def dataPrep2():
 
-    df = pd.read_csv('data.csv')
+    df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv')
 
     scaler = StandardScaler()
     minMax = MinMaxScaler(feature_range=(0, 1))
@@ -82,13 +91,79 @@ def dataPrep2():
     df[num_cols] = minMax.fit_transform(df[num_cols])
     logging.info("normalization done")
 
-    df.to_csv('data.csv', index=False)
+    df.to_csv('/opt/airflow/processed_data/processed_data.csv', index=False)
 
+def EDA():
+
+    df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv')
+
+    print(df)
+    print(df.info())
+
+    print(df.describe().T)
+
+    cat_cols = df.select_dtypes(include=['object', 'category']).columns
+    print(df[cat_cols].describe().T)
+    
+    num_cols = df.select_dtypes(include=['int64', 'float64']).columns
+
+    with PdfPages('/opt/airflow/visualizations/plots.pdf') as pdf_pages:
+
+        for col in num_cols:
+
+            plt.figure(figsize=(16, 9))
+
+            plt.subplot(1, 2, 1)
+            plt.hist(df[col].dropna())
+            plt.title(f'{col} Distribution')
+            plt.xlabel(col)
+            plt.ylabel('Count')
+
+            plt.subplot(1, 2, 2)
+            sns.boxplot(x=df[col])
+            plt.title(f'{col} Boxplot')
+            plt.xlabel(col)
+
+            plt.xticks(rotation=45)
+            plt.gca().xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.2f}'.format(x)))
+
+            pdf_pages.savefig()
+            plt.close()
+        
+        for col in cat_cols:
+            
+            plt.figure(figsize=(16, 9))
+
+            plt.subplot(1, 2, 1)
+            sns.countplot(x=df[col])
+            plt.title(f'{col} Distribution')
+            plt.xlabel(col)
+            plt.ylabel('Count')
+
+            plt.subplot(1, 2, 2)
+            sns.boxplot(x=df[col])
+            plt.title(f'{col} Boxplot')
+            plt.xlabel(col)
+
+            plt.xticks(rotation=45)
+
+            pdf_pages.savefig()
+            plt.close()
+
+        plt.figure(figsize=(12, 7))
+        sns.heatmap(df.drop(cat_cols, axis=1).corr(), annot = True, vmin = -1, vmax = 1)
+        plt.xticks(rotation=45)
+        pdf_pages.savefig()
+        plt.close()
+
+    print(df.isnull().sum())
+
+    profile = yp.ProfileReport(df)
+    profile.to_file("/opt/airflow/visualizations/profile_report.html")
 
 def upload():
     
-
-    df = pd.read_csv('data.csv')
+    df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv')
 
     SHEETS_ID = os.getenv('SHEETS_ID')
     credentials = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(os.getenv('SHEETS_KEY')), ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
@@ -120,9 +195,15 @@ with DAG(
         task_id='dataPrep1_task',
         python_callable=dataPrep1,
     )
+
     dataPrep2_task = PythonOperator(
         task_id='dataPrep2_task',
         python_callable=dataPrep2,
+    )
+
+    EDA_task = PythonOperator(
+        task_id='EDA_task',
+        python_callable=EDA,
     )
 
     upload_task = PythonOperator(
@@ -131,3 +212,4 @@ with DAG(
     )
 
     download_task >> dataPrep1_task >> dataPrep2_task >> upload_task
+    download_task >> EDA_task
