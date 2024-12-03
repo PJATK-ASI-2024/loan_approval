@@ -8,10 +8,11 @@ import pandas as pd
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import mean_absolute_error
 from datetime import datetime
-from airflow.operators.email_operator import EmailOperator
+from airflow.operators.email import EmailOperator
 import json
 from oauth2client.service_account import ServiceAccountCredentials
 from airflow.operators.python import PythonOperator
+from airflow.exceptions import AirflowException
 
 logging.basicConfig(
     level=logging.INFO,
@@ -60,19 +61,6 @@ def validate():
     accuracy = accuracy_score(y, y_pred)
     mae = mean_absolute_error(y, y_pred)
     
-    if(accuracy < 0.9 | mae < 0.9):
-
-
-    
-
-    directory = '/opt/airflow/models'
-    file_path = os.path.join(directory, 'model.py')
-
-    os.makedirs(directory, exist_ok=True)
-
-    with open('/opt/airflow/models/model.pkl', 'wb') as f:
-        pickle.dump(model, f)
-
     directory = '/opt/airflow/reports'
     file_path = os.path.join(directory, 'evaluation_report.txt')
 
@@ -83,6 +71,9 @@ def validate():
         report_file.write(f"------------------------\n")
         report_file.write(f"Random forest model accuracy: {accuracy * 100:.2f}%")
         report_file.write(f"Random forest model mae: {mae:.2f}%")
+
+    if(accuracy < 0.9 | mae < 0.9):
+        raise AirflowException
     
 with DAG(
     'train_dag',
@@ -106,7 +97,7 @@ with DAG(
         task_id='email_task',
         to='s25361@pjwstk.edu.pl',
         subject='Model validation failed',
-        html_content='<p>This is a test email sent by Apache Airflow.</p>',
+        html_content='<p>test</p>',
     )
 
     download_task >> validate_task 
