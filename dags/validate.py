@@ -76,11 +76,10 @@ def validate():
         raise AirflowException
     
 with DAG(
-    'train_dag',
+    'validate_dag',
     start_date=datetime(2023, 1, 1),
     schedule_interval=None,
     catchup=False,
-    email_on_failure=True
 ) as dag:
 
     download_task = PythonOperator(
@@ -98,6 +97,7 @@ with DAG(
         to='s25361@pjwstk.edu.pl',
         subject='Model validation failed',
         html_content='<p>test</p>',
+        trigger_rule='one_failed'
     )
 
-    download_task >> validate_task 
+    download_task >> validate_task >> email_task
