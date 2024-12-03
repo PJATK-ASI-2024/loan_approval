@@ -5,9 +5,10 @@ from airflow import DAG
 import gspread
 import os
 import shutil
+from google.oauth2.service_account import Credentials
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from oauth2client.service_account import ServiceAccountCredentials
 from airflow.operators.python import PythonOperator
 from gspread_dataframe import set_with_dataframe
 
@@ -46,7 +47,7 @@ def split_data():
 def upload():
     SHEETS_ID = os.getenv('SHEETS_ID')
 
-    credentials = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(os.getenv('SHEETS_KEY')), ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
+    credentials = Credentials.from_service_account_info(json.loads(os.getenv('SHEETS_KEY')), scopes=['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
    
     data30 = pd.read_csv('data30.csv')
     data70 = pd.read_csv('data70.csv')

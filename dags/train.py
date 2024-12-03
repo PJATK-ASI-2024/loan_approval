@@ -12,7 +12,8 @@ from sklearn.model_selection import train_test_split
 from datetime import datetime
 import logging
 import json
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
+
 from airflow.operators.python import PythonOperator
 
 logging.basicConfig(
@@ -28,8 +29,8 @@ def download():
     logging.info("downloading...")
 
     SHEETS_ID = os.getenv('SHEETS_ID')
-    credentials = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(os.getenv('SHEETS_KEY')), ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
-   
+    credentials = Credentials.from_service_account_info(json.loads(os.getenv('SHEETS_KEY')), scopes=['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
+      
     client = gspread.authorize(credentials)
     sheet = client.open_by_key(SHEETS_ID).worksheet("Prepared")
 
@@ -38,6 +39,14 @@ def download():
     df = pd.DataFrame(sheetValues)
     df.columns = df.iloc[0]
     df = df[1:]
+
+    num_cols = ['person_age', 'person_income',
+        'person_emp_exp', 'loan_amnt',
+        'loan_int_rate', 'loan_percent_income', 'cb_person_cred_hist_length',
+        'credit_score']
+    for col in num_cols:
+        df[col] = df[col].astype(str).str.replace(',', '.', regex=False)
+
     logging.info("downloaded")
 
     directory = '/opt/airflow/processed_data'
@@ -49,11 +58,12 @@ def download():
 
 def train():
 
-    df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv', nrows=10000)
+    df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv', nrows=25000)
 
+    cat_cols = ['person_education', 'person_home_ownership', 'loan_intent']
     
     X = df.drop('loan_status', axis=1)
-    X = pd.get_dummies(X, drop_first=True)
+    X = pd.get_dummies(X, drop_first=True, columns=cat_cols)
     
     y = df['loan_status']
 
