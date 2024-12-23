@@ -1,4 +1,3 @@
-
 import logging
 import pickle
 from airflow import DAG
@@ -15,7 +14,12 @@ from airflow.operators.python import PythonOperator
 from airflow.exceptions import AirflowException
 from airflow.models import Variable
 
-
+# !!!
+# ///////////////////////////////////////////////////////////////////////////
+# Ta sama logika została przeniesiona do train.py
+# Zostawiam ten plik na wypadek gdyby coś było nie tak ze zmienioną wersją
+# ///////////////////////////////////////////////////////////////////////////
+# !!!
 
 logging.basicConfig(
     level=logging.INFO,
