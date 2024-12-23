@@ -13,8 +13,10 @@ from datetime import datetime
 import logging
 import json
 from google.oauth2.service_account import Credentials
-
+from airflow.models import Variable
+from airflow.exceptions import AirflowException
 from airflow.operators.python import PythonOperator
+from airflow.operators.email import EmailOperator
 
 logging.basicConfig(
     level=logging.INFO,
@@ -96,7 +98,19 @@ def train():
         report_file.write(f"------------------------\n")
         report_file.write(f"Random forest model accuracy: {accuracy * 100:.2f}%")
         report_file.write(f"Random forest model mae: {mae:.2f}%")
+
+    mail_content=f"""
+        Model validation report:</br>
+        Accuracy: {accuracy * 100:.2f}%</br>
+        MAE: {mae:.2f}%")
+    """
+
+    Variable.set("mail_content", mail_content)
+
+    if(accuracy < 0.99 or mae > 0.01):
+        raise AirflowException('Model evaluation failed')
     
+
 with DAG(
     'train_dag',
     start_date=datetime(2023, 1, 1),
@@ -113,6 +127,14 @@ with DAG(
         task_id='train_task',
         python_callable=train,
     )
+    email_task = EmailOperator(
+        task_id='email_task',
+        to='s25361@pjwstk.edu.pl',
+        subject='Model validation failed',
+        html_content="""<h1>Random forest model validation or tests failed.</h1>
+            <p>{{ var.value.mail_content }}</p>""",
+        trigger_rule='one_failed'
+    )
 
 
-    download_task >> train_task 
+    download_task >> train_task >> email_task
