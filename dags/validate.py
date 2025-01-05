@@ -1,4 +1,3 @@
-
 import logging
 import pickle
 from airflow import DAG
@@ -6,17 +5,21 @@ import gspread
 import os
 import pandas as pd
 from sklearn.metrics import accuracy_score
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import train_test_split
 from datetime import datetime
-import logging
+from airflow.operators.email import EmailOperator
 import json
 from google.oauth2.service_account import Credentials
-from airflow.models import Variable
-from airflow.exceptions import AirflowException
 from airflow.operators.python import PythonOperator
-from airflow.operators.email import EmailOperator
+from airflow.exceptions import AirflowException
+from airflow.models import Variable
+
+# !!!
+# ///////////////////////////////////////////////////////////////////////////
+# Ta sama logika została przeniesiona do train.py
+# Zostawiam ten plik na wypadek gdyby coś było nie tak ze zmienioną wersją
+# ///////////////////////////////////////////////////////////////////////////
+# !!!
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,13 +37,16 @@ def download():
     credentials = Credentials.from_service_account_info(json.loads(os.getenv('SHEETS_KEY')), scopes=['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
       
     client = gspread.authorize(credentials)
-    sheet = client.open_by_key(SHEETS_ID).worksheet("Prepared")
+    sheet = client.open_by_key(SHEETS_ID).worksheet("Douczeniowy")
 
     sheetValues = sheet.get_all_values()
 
     df = pd.DataFrame(sheetValues)
     df.columns = df.iloc[0]
     df = df[1:]
+
+    df['person_gender'] = df['person_gender'].apply(lambda x: 1 if x == 'male' else 0)
+    df['previous_loan_defaults_on_file'] = df['previous_loan_defaults_on_file'].apply(lambda x: 1 if x == 'Yes' else 0)
 
     num_cols = ['person_age', 'person_income',
         'person_emp_exp', 'loan_amnt',
@@ -49,19 +55,26 @@ def download():
     for col in num_cols:
         df[col] = df[col].astype(str).str.replace(',', '.', regex=False)
 
+
+
     logging.info("downloaded")
 
     directory = '/opt/airflow/processed_data'
-    file_path = os.path.join(directory, 'processed_data.csv')
+    file_path = os.path.join(directory, 'douczeniowy.csv')
 
     os.makedirs(directory, exist_ok=True)
 
     df.to_csv(file_path, index=False)
 
-def train():
+def validate():
+        
+    df = pd.read_csv('/opt/airflow/processed_data/douczeniowy.csv')
 
-    df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv', nrows=25000)
 
+
+    with open('/opt/airflow/models/model.pkl', 'rb') as file:
+        model = pickle.load(file)
+    
     cat_cols = ['person_education', 'person_home_ownership', 'loan_intent']
     
     X = df.drop('loan_status', axis=1)
@@ -69,35 +82,10 @@ def train():
     
     y = df['loan_status']
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    y_pred = model.predict(X)
 
-    model = RandomForestClassifier()
-    model.fit(X_train, y_train)
-
-    y_pred = model.predict(X_test)
-
-    accuracy = accuracy_score(y_test, y_pred)
-    mae = mean_absolute_error(y_test, y_pred)
-    
-
-    directory = '/opt/airflow/models'
-    file_path = os.path.join(directory, 'model.py')
-
-    os.makedirs(directory, exist_ok=True)
-
-    with open('/opt/airflow/models/model.pkl', 'wb') as f:
-        pickle.dump(model, f)
-
-    directory = '/opt/airflow/reports'
-    file_path = os.path.join(directory, 'evaluation_report.txt')
-
-    os.makedirs(directory, exist_ok=True)
-
-    with open(file_path, 'w') as report_file:
-        report_file.write(f"Model Evaluation Report\n")
-        report_file.write(f"------------------------\n")
-        report_file.write(f"Random forest model accuracy: {accuracy * 100:.2f}%")
-        report_file.write(f"Random forest model mae: {mae:.2f}%")
+    accuracy = accuracy_score(y, y_pred)
+    mae = mean_absolute_error(y, y_pred)
 
     mail_content=f"""
         Model validation report:</br>
@@ -109,10 +97,9 @@ def train():
 
     if(accuracy < 0.99 or mae > 0.01):
         raise AirflowException('Model evaluation failed')
-    
 
 with DAG(
-    'train_dag',
+    'validate_dag',
     start_date=datetime(2023, 1, 1),
     schedule_interval=None,
     catchup=False,
@@ -123,10 +110,11 @@ with DAG(
         python_callable=download,
     )
 
-    train_task = PythonOperator(
-        task_id='train_task',
-        python_callable=train,
+    validate_task = PythonOperator(
+        task_id='validate_task',
+        python_callable=validate,
     )
+
     email_task = EmailOperator(
         task_id='email_task',
         to='s25361@pjwstk.edu.pl',
@@ -136,5 +124,4 @@ with DAG(
         trigger_rule='one_failed'
     )
 
-
-    download_task >> train_task >> email_task
+    download_task >> validate_task >> email_task

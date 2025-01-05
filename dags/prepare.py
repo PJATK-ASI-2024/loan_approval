@@ -13,11 +13,11 @@ import seaborn as sns
 import matplotlib.ticker as ticker
 from matplotlib.backends.backend_pdf import PdfPages
 import ydata_profiling as yp
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from oauth2client.service_account import ServiceAccountCredentials
 from gspread_dataframe import set_with_dataframe
 from airflow.operators.python import PythonOperator
 
@@ -34,7 +34,7 @@ def download():
     logging.info("downloading...")
 
     SHEETS_ID = os.getenv('SHEETS_ID')
-    credentials = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(os.getenv('SHEETS_KEY')), ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
+    credentials = Credentials.from_service_account_info(json.loads(os.getenv('SHEETS_KEY')), scopes=['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
    
     client = gspread.authorize(credentials)
     sheet = client.open_by_key(SHEETS_ID).worksheet("Modelowy")
@@ -44,6 +44,15 @@ def download():
     df = pd.DataFrame(sheetValues)
     df.columns = df.iloc[0]
     df = df[1:]
+
+    num_cols = ['person_age', 'person_income',
+    'person_emp_exp', 'loan_amnt',
+    'loan_int_rate', 'loan_percent_income', 'cb_person_cred_hist_length',
+    'credit_score']
+    for col in num_cols:
+        df[col] = df[col].astype(str).str.replace(',', '.', regex=False)
+
+
     logging.info("downloaded")
 
 
@@ -60,12 +69,11 @@ def dataPrep1():
     df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv')
 
     logging.info("preparing part 1...")
-    num_cols = ['person_age', 'person_income',
-       'person_emp_exp', 'loan_amnt',
-       'loan_int_rate', 'loan_percent_income', 'cb_person_cred_hist_length',
-       'credit_score', 'loan_status']
-    for col in num_cols:
-        df[col] = df[col].astype(str).str.replace(',', '.', regex=False)
+
+    df['person_gender'] = df['person_gender'].apply(lambda x: 1 if x == 'male' else 0)
+    df['previous_loan_defaults_on_file'] = df['previous_loan_defaults_on_file'].apply(lambda x: 1 if x == 'Yes' else 0)
+
+
 
     num_duplicates = df.duplicated().sum()
     if num_duplicates > 0:
@@ -182,7 +190,7 @@ def upload():
     df = pd.read_csv('/opt/airflow/processed_data/processed_data.csv')
 
     SHEETS_ID = os.getenv('SHEETS_ID')
-    credentials = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(os.getenv('SHEETS_KEY')), ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
+    credentials = Credentials.from_service_account_info(json.loads(os.getenv('SHEETS_KEY')), scopes=['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive'])
    
     client = gspread.authorize(credentials)
     sheet = client.open_by_key(SHEETS_ID)
@@ -227,5 +235,4 @@ with DAG(
         python_callable=upload,
     )
 
-    download_task >> dataPrep1_task >> dataPrep2_task >> upload_task
-    download_task >> EDA_task
+    EDA_task << download_task >> dataPrep1_task >> dataPrep2_task >> upload_task
