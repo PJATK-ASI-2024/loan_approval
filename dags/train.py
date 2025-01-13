@@ -65,8 +65,9 @@ def train():
     cat_cols = ['person_education', 'person_home_ownership', 'loan_intent']
     
     X = df.drop('loan_status', axis=1)
+
     X = pd.get_dummies(X, drop_first=True, columns=cat_cols)
-    
+
     y = df['loan_status']
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
@@ -96,6 +97,7 @@ def train():
     with open(file_path, 'w') as report_file:
         report_file.write(f"Model Evaluation Report\n")
         report_file.write(f"------------------------\n")
+ 
         report_file.write(f"Random forest model accuracy: {accuracy * 100:.2f}%")
         report_file.write(f"Random forest model mae: {mae:.2f}%")
 
@@ -109,6 +111,7 @@ def train():
 
     if(accuracy < 0.99 or mae > 0.01):
         raise AirflowException('Model evaluation failed')
+
     
 
 with DAG(
