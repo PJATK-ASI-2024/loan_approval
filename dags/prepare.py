@@ -235,4 +235,5 @@ with DAG(
         python_callable=upload,
     )
 
+
     EDA_task << download_task >> dataPrep1_task >> dataPrep2_task >> upload_task

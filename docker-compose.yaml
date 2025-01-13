@@ -55,7 +55,6 @@ x-airflow-common: &airflow-common
     SHEETS_KEY: ${SHEETS_KEY}
     KAGGLE_KEY: ${KAGGLE_KEY}
     KAGGLE_USERNAME: ${KAGGLE_USERNAME}
-    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
@@ -85,8 +84,10 @@ x-airflow-common: &airflow-common
     - ${AIRFLOW_PROJ_DIR:-.}/visualizations:/opt/airflow/visualizations
     - /var/run/docker.sock:/var/run/docker.sock
   user: "${AIRFLOW_UID:-50000}:0"
+
   env_file:
       - .env
+
   depends_on: &airflow-common-depends-on
     redis:
       condition: service_healthy
