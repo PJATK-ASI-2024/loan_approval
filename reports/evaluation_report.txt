@@ -1,14 +1,3 @@
 Model Evaluation Report
 ------------------------
-Random forest model accuracy: 89.93%
-Random forest model mae: 0.10%
-features: Index(['person_age', 'person_gender', 'person_income', 'person_emp_exp',
-       'loan_amnt', 'loan_int_rate', 'loan_percent_income',
-       'cb_person_cred_hist_length', 'credit_score',
-       'previous_loan_defaults_on_file', 'person_education_Bachelor',
-       'person_education_Doctorate', 'person_education_High School',
-       'person_education_Master', 'person_home_ownership_OTHER',
-       'person_home_ownership_OWN', 'person_home_ownership_RENT',
-       'loan_intent_EDUCATION', 'loan_intent_HOMEIMPROVEMENT',
-       'loan_intent_MEDICAL', 'loan_intent_PERSONAL', 'loan_intent_VENTURE'],
-      dtype='object')
+Random forest model accuracy: 90.23%Random forest model mae: 0.10%
