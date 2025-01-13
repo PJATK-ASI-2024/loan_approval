@@ -45,7 +45,7 @@ Dane testowe są w w folderze /API/sample_data
 
 Wyniki testów znajdują się w folderze /API/sample_data/sample_data_res
 
-odpalenie apache airflow:
+odpalenie apache airflow (po sklonowaniu repo):
 docker compose up --build
 
 odpalenie api:
