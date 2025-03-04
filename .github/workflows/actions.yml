@@ -32,12 +32,24 @@ jobs:
         run: |
           docker compose up -d
 
-      - name: Trigger Airflow DAG
+      - name: Trigger 3_download-public_split_save DAG
         run: |
           docker exec s25361_loan_approval-airflow-webserver-1 airflow dags trigger 3_download-public_split_save
+
+      - name: Trigger 3_download-cloud_clean_standard-normalisate_save DAG
+        run: |
           docker exec s25361_loan_approval-airflow-webserver-1 airflow dags trigger 3_download-cloud_clean_standard-normalisate_save
+
+      - name: Trigger 4_building_model DAG
+        run: |
           docker exec s25361_loan_approval-airflow-webserver-1 airflow dags trigger 4_building_model
+
+      - name: Trigger 5_monitoring DAG
+        run: |
           docker exec s25361_loan_approval-airflow-webserver-1 airflow dags trigger 5_monitoring
+
+      - name: Trigger 6_contenerysation_and_api
+        run: |
           docker exec s25361_loan_approval-airflow-webserver-1 airflow dags trigger 6_contenerysation_and_api
 
       - name: Set up API
