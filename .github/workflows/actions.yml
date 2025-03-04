@@ -39,7 +39,9 @@ jobs:
       - name: Set up and test API
         run: |
           docker pull jaroslawgawrych/loan_approval_api:latest
+          echo "======"
           docker run -d -p 5000:5000 jaroslawgawrych/loan_approval_api:latest
+          echo "======"
           python models/client.py
 
       - name: Upload log artifact
