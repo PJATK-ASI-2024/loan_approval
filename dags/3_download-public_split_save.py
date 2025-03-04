@@ -6,7 +6,6 @@ import gspread
 import os
 import shutil
 from google.oauth2.service_account import Credentials
-
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from airflow.operators.python import PythonOperator

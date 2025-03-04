@@ -1,15 +1,11 @@
 import logging
 import pickle
 from airflow import DAG
-import gspread
-import os
 import pandas as pd
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import mean_absolute_error
 from datetime import datetime
 from airflow.operators.email import EmailOperator
-import json
-from google.oauth2.service_account import Credentials
 from airflow.operators.python import PythonOperator
 from airflow.exceptions import AirflowException
 from airflow.models import Variable
