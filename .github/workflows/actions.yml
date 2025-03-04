@@ -32,17 +32,14 @@ jobs:
         run: |
           docker compose up -d
 
-      - name: Set up API
+      - name: Install dependencies
+        run: |
+          pip install requests
+
+      - name: Set up and test API
         run: |
           docker pull jaroslawgawrych/loan_approval_api:latest
           docker run -d -p 5000:5000 jaroslawgawrych/loan_approval_api:latest
-
-      - name: Install dependencies
-        run: |
-          pip install requests[security]
-
-      - name: Test model
-        run: |
           python models/client.py
 
       - name: Upload log artifact
