@@ -6,7 +6,7 @@ Cel projektu: Wdrożenie modelu predykcyjnego dla wartości opisującej czy osob
 
 Problem do rozwiązania: Wytworzenie oraz wdrożenie modelu o zadowalającej jakości.
 
-Wybrane źródło danych: Dane historyczne na temat udzielanych pożyczek. Dataset zawiera 45,000 rekordów.
+Wybrane źródło danych: Dane historyczne na temat udzielanych pożyczek. Dataset zawiera 45 000 rekordów.
 
 Narzędzie do automatycznej analizy EDA: ydata_profiling - odpowiednik prandas-profiling.
 Automatyczna analiza została zapisana w pliku profile_report.html.
@@ -18,9 +18,9 @@ Najbardziej warte uwagi są współczynniki korelacji pomiędzy:
 4. Loan_percent_income oraz loan_amnt
 
 Są to 4 najwyższe współczynniki korelacji, o czym należy pamiętać przy dalszym rozwoju modelu i jego usprawnianiu.
-Warto też zauważyć, iż rozkład atrybutu person_income jest bardzo wychylony ku niższym wartościom. Rozstrzał pomiędzy wartością maksymalną i minimalną jest bardzo duży, a znaczna większość wartości oscyluje w pobliżu dolnej granicy.
+Warto też zauważyć, że rozkład atrybutu person_income jest bardzo wychylony ku niższym wartościom. Rozstrzał pomiędzy wartością maksymalną i minimalną jest bardzo duży, a znaczna większość wartości oscyluje w pobliżu dolnej granicy.
 Wybranym narzędziem AutoML jest TPOT.
-Narzędzie to przy użyciu różnych parametrów zawsze zwracało (lecz w różnej kolejności) jako najlepsze te 3 algorytmy:
+Narzędzie to przy użyciu różnych parametrów zawsze zwracało (lecz w różnej kolejności) te 3 algorytmy jako najlepsze:
 
 1. Random forest
 2. XGB
@@ -36,18 +36,16 @@ XGB model mae: 0.12%
 
 W związku z tym wstępnie zdecydowałem się wybrać algorytm Random forest.
 
-aby zobaczyć wyniki autoML należy odkomentować linijkę:
-autoML(X_train, y_train)
-
-Dane testowe są w w folderze /API/sample_data
-
-Ścieżka do skryptu testującego /API/client.py
-
-Wyniki testów znajdują się w folderze /API/sample_data/sample_data_res
+aby zobaczyć wyniki autoML należy odkomentować linijkę autoML(X_train, y_train) w skrypcie /autoML.py
 
 odpalenie apache airflow (po sklonowaniu repo):
 docker compose up --build
 
-odpalenie api:
+odpalenie API do testowania:
 docker pull jaroslawgawrych/s25361_loan_approval_api:latest
 docker run -d -p 5000:5000 jaroslawgawrych/s25361_loan_approval_api:latest
+
+Ścieżka do skryptu testującego /models/client.py
+
+Dane testowe są w w folderze /models/sample_data
+Wyniki testów znajdują się w folderze /models/sample_data/sample_data_res

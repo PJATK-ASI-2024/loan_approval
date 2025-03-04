@@ -5,7 +5,7 @@ import io
 
 app = FastAPI()
 
-with open('./models/model.pkl', 'rb') as file:
+with open('model.pkl', 'rb') as file:
         model = pickle.load(file)
 
 @app.post("/")

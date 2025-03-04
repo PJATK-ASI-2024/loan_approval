@@ -72,7 +72,7 @@
         "loan_intent_MEDICAL": 1,
         "loan_intent_PERSONAL": 0,
         "loan_intent_VENTURE": 0,
-        "prediction": 0
+        "prediction": 1
     },
     {
         "person_age": 28,
@@ -122,7 +122,7 @@
         "loan_intent_MEDICAL": 0,
         "loan_intent_PERSONAL": 0,
         "loan_intent_VENTURE": 0,
-        "prediction": 1
+        "prediction": 0
     },
     {
         "person_age": 54,
@@ -172,7 +172,7 @@
         "loan_intent_MEDICAL": 0,
         "loan_intent_PERSONAL": 0,
         "loan_intent_VENTURE": 0,
-        "prediction": 1
+        "prediction": 0
     },
     {
         "person_age": 34,
@@ -247,7 +247,7 @@
         "loan_intent_MEDICAL": 1,
         "loan_intent_PERSONAL": 0,
         "loan_intent_VENTURE": 0,
-        "prediction": 0
+        "prediction": 1
     },
     {
         "person_age": 57,
@@ -272,7 +272,7 @@
         "loan_intent_MEDICAL": 0,
         "loan_intent_PERSONAL": 0,
         "loan_intent_VENTURE": 0,
-        "prediction": 1
+        "prediction": 0
     },
     {
         "person_age": 18,
@@ -297,7 +297,7 @@
         "loan_intent_MEDICAL": 1,
         "loan_intent_PERSONAL": 0,
         "loan_intent_VENTURE": 0,
-        "prediction": 0
+        "prediction": 1
     },
     {
         "person_age": 44,
@@ -397,7 +397,7 @@
         "loan_intent_MEDICAL": 0,
         "loan_intent_PERSONAL": 0,
         "loan_intent_VENTURE": 0,
-        "prediction": 1
+        "prediction": 0
     },
     {
         "person_age": 28,
@@ -447,7 +447,7 @@
         "loan_intent_MEDICAL": 0,
         "loan_intent_PERSONAL": 0,
         "loan_intent_VENTURE": 0,
-        "prediction": 0
+        "prediction": 1
     },
     {
         "person_age": 33,
