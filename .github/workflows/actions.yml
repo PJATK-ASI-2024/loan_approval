@@ -21,7 +21,6 @@ jobs:
       - name: "Create env file"
         run: |
           touch .env
-          echo API_ENDPOINT="https://xxx.execute-api.us-west-2.amazonaws.com" >> .env
           echo KAGGLE_KEY=${{ secrets.KAGGLE_KEY }} >> .env
           echo KAGGLE_USERNAME=${{ secrets.KAGGLE_USERNAME }} >> .env
           echo SHEETS_KEY=${{ secrets.SHEETS_KEY }} >> .env
