@@ -1,4 +1,4 @@
-# loan_approval
+# s25361_loan_approval
 
 Temat: Kwalifikator pożyczkowy
 
