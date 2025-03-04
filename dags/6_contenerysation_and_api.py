@@ -15,7 +15,7 @@ with DAG(
 
     build_image = BashOperator(
         task_id='build_docker_image',
-        bash_command=f'docker build -t jaroslawgawrych/s25361_loan_approval_api:latest -f /opt/airflow/models/Dockerfile .',
+        bash_command=f'docker build -t jaroslawgawrych/loan_approval_api:latest -f /opt/airflow/models/Dockerfile .',
         dag=dag,
     )
 
@@ -27,7 +27,7 @@ with DAG(
 
     publish_image = BashOperator(
         task_id='publish_docker_image',
-        bash_command=f'docker push jaroslawgawrych/s25361_loan_approval_api:latest',
+        bash_command=f'docker push jaroslawgawrych/loan_approval_api:latest',
         dag=dag,
     )
 
