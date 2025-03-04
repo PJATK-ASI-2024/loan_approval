@@ -34,15 +34,11 @@ jobs:
 
       - name: Trigger Airflow DAG
         run: |
-          docker exec -it s25361_loan_approval-airflow-webserver-1 airflow dags trigger 3_download-public_split_save
-          docker exec -it s25361_loan_approval-airflow-webserver-1 airflow dags trigger 3_download-cloud_clean_standard-normalisate_save
-          docker exec -it s25361_loan_approval-airflow-webserver-1 airflow dags trigger 4_building_model
-          docker exec -it s25361_loan_approval-airflow-webserver-1 airflow dags trigger 5_monitoring
-          docker exec -it s25361_loan_approval-airflow-webserver-1 airflow dags trigger 6_contenerysation_and_api
-
-      - name: Clean up
-        run: |
-          docker-compose down
+          docker exec s25361_loan_approval-airflow-webserver-1 airflow dags trigger 3_download-public_split_save
+          docker exec s25361_loan_approval-airflow-webserver-1 airflow dags trigger 3_download-cloud_clean_standard-normalisate_save
+          docker exec s25361_loan_approval-airflow-webserver-1 airflow dags trigger 4_building_model
+          docker exec s25361_loan_approval-airflow-webserver-1 airflow dags trigger 5_monitoring
+          docker exec s25361_loan_approval-airflow-webserver-1 airflow dags trigger 6_contenerysation_and_api
 
       - name: Set up API
         run: |
@@ -58,3 +54,7 @@ jobs:
         with:
           name: log
           path: log.txt
+
+      - name: Clean up
+        run: |
+          docker-compose down
