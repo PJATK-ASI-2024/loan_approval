@@ -36,7 +36,7 @@ jobs:
         run: |
           pip install requests
 
-      - name: Set up and test API
+      - name: Set up API
         run: |
           docker pull jaroslawgawrych/loan_approval_api:latest
           docker run -d -p 5000:5000 jaroslawgawrych/loan_approval_api:latest
