@@ -18,13 +18,18 @@ jobs:
         with:
           python-version: "3.12.0"
 
+      - name: "Create env file"
+        run: |
+          touch .env
+          echo API_ENDPOINT="https://xxx.execute-api.us-west-2.amazonaws.com" >> .env
+          echo KAGGLE_KEY=${{ secrets.KAGGLE_KEY }} >> .env
+          echo KAGGLE_USERNAME=${{ secrets.KAGGLE_USERNAME }} >> .env
+          echo SHEETS_KEY=${{ secrets.SHEETS_KEY }} >> .env
+          echo SHEET_ID=${{ secrets.SHEET_ID }} >> .env
+          cat .env
+
       - name: Set up airflow
         run: docker compose up --build
-        env:
-          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
-          SHEETS_KEY: ${{ secrets.SHEETS_KEY }}
-          SHEET_ID: ${{ secrets.SHEET_ID }}
 
       - name: Set up API
         run: docker pull jaroslawgawrych/loan_approval_api:latest
