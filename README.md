@@ -42,8 +42,10 @@ odpalenie apache airflow (po sklonowaniu repo):
 docker compose up --build
 
 odpalenie API do testowania:
-docker pull jaroslawgawrych/s25361_loan_approval_api:latest
-docker run -d -p 5000:5000 jaroslawgawrych/s25361_loan_approval_api:latest
+
+docker pull jaroslawgawrych/loan_approval_api:latest
+
+docker run -d -p 5000:5000 jaroslawgawrych/loan_approval_api:latest
 
 Ścieżka do skryptu testującego /models/client.py
 
