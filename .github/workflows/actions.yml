@@ -39,7 +39,7 @@ jobs:
 
       - name: Test model
         run: |
-          python /models/client.py
+          python models/client.py
 
       - name: Upload log artifact
         uses: actions/upload-artifact@v4
