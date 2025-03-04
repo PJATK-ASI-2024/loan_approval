@@ -50,4 +50,3 @@ jobs:
       - name: Clean up
         run: |
           docker compose down
-          docker rm jaroslawgawrych/loan_approval_api:latest
