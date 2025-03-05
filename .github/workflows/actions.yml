@@ -41,12 +41,6 @@ jobs:
           docker pull jaroslawgawrych/loan_approval_api:latest
           docker run -d -p 5000:5000 jaroslawgawrych/loan_approval_api:latest
 
-      - name: Upload log artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: log
-          path: log.txt
-
       - name: Clean up
         run: |
           docker compose down
